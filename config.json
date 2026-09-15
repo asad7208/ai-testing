@@ -1,0 +1,15 @@
+{
+  "video_folder": "/home/quidich/A_QuidichWork/stiqy_test_video/ai-keyr-buggy",
+  "extensions": [
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
+    ".m4v",
+    ".mpg",
+    ".mpeg",
+    ".webm"
+  ],
+  "stiqy_seg_model_folder": "/home/quidich/A_QuidichWork/ai-testing/weights/stiqy",
+  "qt_det_model_folder": "/home/quidich/A_QuidichWork/ai-testing/weights/qt"
+}

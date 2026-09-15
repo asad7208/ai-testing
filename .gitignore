@@ -1,0 +1,48 @@
+# Model weights
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.weights
+weights/
+
+# Videos
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.m4v
+*.mpg
+*.mpeg
+*.webm
+*.ts
+*.m2ts
+*.mts
+
+# Images
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tif
+*.tiff
+*.exr
+
+# Output / data
+output/
+outputs/
+runs/
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
