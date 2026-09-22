@@ -38,6 +38,20 @@ class SegDetector:
         self.names = self.model.names
         return self
 
+    def boxes(self, frame, class_name="person"):
+        """Return xyxy boxes for one class (all classes if the model has no such name)."""
+        if self.model is None:
+            return []
+        result = self.model.predict(frame, conf=self.conf, verbose=False)[0]
+        if result.boxes is None:
+            return []
+        wanted = [i for i, n in self.names.items() if n == class_name]
+        return [
+            tuple(box.xyxy[0].int().tolist())
+            for box in result.boxes
+            if not wanted or int(box.cls) in wanted
+        ]
+
     def predict(self, frame, show_boxes=True, show_masks=True, opacity=0.5):
         """Return a copy of frame with masks and/or boxes drawn on it."""
         if self.model is None:

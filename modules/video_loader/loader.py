@@ -14,6 +14,9 @@ def load_config(path="config.json"):
     config.setdefault("extensions", DEFAULT_EXTENSIONS)
     config.setdefault("stiqy_seg_model_folder", "")
     config.setdefault("qt_det_model_folder", "")
+    config.setdefault("stiqy_sam_model_folder", "")
+    config.setdefault("stiqy_rvm_ckpt_folder", "")
+    config.setdefault("output_folder", "output")
     return config
 
 

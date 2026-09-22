@@ -24,6 +24,7 @@ class VideoPlayer(QWidget):
         self.current_frame = 0
         self._current_pixmap = None
         self._raw_frame = None
+        self.processed_frame = None
         self.processor = None  # optional callable: frame -> frame
 
         self.display = QLabel("No video loaded")
@@ -159,6 +160,7 @@ class VideoPlayer(QWidget):
         frame = self._raw_frame
         if self.processor is not None:
             frame = self.processor(frame)
+        self.processed_frame = frame
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, _ = rgb.shape
         image = QImage(rgb.data, w, h, 3 * w, QImage.Format_RGB888).copy()
