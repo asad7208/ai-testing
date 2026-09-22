@@ -238,6 +238,11 @@ class MainWindow(QMainWindow):
         self.detect_check.setEnabled(False)
         self.detect_check.toggled.connect(self.player.refresh)
 
+        self.box_check = QCheckBox("Show boxes")
+        self.box_check.setChecked(True)
+        self.box_check.setEnabled(False)
+        self.box_check.toggled.connect(self.player.refresh)
+
         self.mask_check = QCheckBox("Show segmentation")
         self.mask_check.setChecked(True)
         self.mask_check.setEnabled(False)
@@ -255,6 +260,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.model_combo)
         layout.addWidget(self.detect_check)
         layout.addWidget(self.mask_check)
+        layout.addWidget(self.box_check)
         layout.addWidget(QLabel("Mask opacity"))
         layout.addWidget(self.opacity_slider)
 
@@ -449,13 +455,17 @@ class MainWindow(QMainWindow):
     def model_selected(self, index):
         if index < 1:
             self.detect_check.setChecked(False)
-            for widget in (self.detect_check, self.mask_check, self.opacity_slider):
+            for widget in (
+                self.detect_check, self.mask_check, self.box_check, self.opacity_slider
+            ):
                 widget.setEnabled(False)
             self.player.refresh()
             return
         name, path = self.models[index - 1]
         self.detector.load(path)
-        for widget in (self.detect_check, self.mask_check, self.opacity_slider):
+        for widget in (
+            self.detect_check, self.mask_check, self.box_check, self.opacity_slider
+        ):
             widget.setEnabled(True)
         self.detect_check.setChecked(True)
         self.statusBar().showMessage(f"Loaded model {name}")
@@ -467,6 +477,7 @@ class MainWindow(QMainWindow):
         if self.detector.model is not None and self.detect_check.isChecked():
             frame = self.detector.predict(
                 frame,
+                show_boxes=self.box_check.isChecked(),
                 show_masks=self.mask_check.isChecked(),
                 opacity=self.opacity_slider.value() / 100.0,
             )

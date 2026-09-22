@@ -42,7 +42,11 @@ class SegDetector:
         """Return xyxy boxes for one class (all classes if the model has no such name)."""
         if self.model is None:
             return []
-        result = self.model.predict(frame, conf=self.conf, verbose=False)[0]
+        # retina_masks keeps masks at the original frame size; without it they
+        # come back at the letterboxed model input and resizing shifts them.
+        result = self.model.predict(
+            frame, conf=self.conf, retina_masks=True, verbose=False
+        )[0]
         if result.boxes is None:
             return []
         wanted = [i for i, n in self.names.items() if n == class_name]
@@ -57,15 +61,20 @@ class SegDetector:
         if self.model is None:
             return frame
 
-        result = self.model.predict(frame, conf=self.conf, verbose=False)[0]
+        # retina_masks keeps masks at the original frame size; without it they
+        # come back at the letterboxed model input and resizing shifts them.
+        result = self.model.predict(
+            frame, conf=self.conf, retina_masks=True, verbose=False
+        )[0]
         out = frame.copy()
 
         if show_masks and result.masks is not None:
             overlay = out.copy()
             for i, mask in enumerate(result.masks.data.cpu().numpy()):
                 cls = int(result.boxes.cls[i]) if result.boxes is not None else i
-                mask = cv2.resize(mask, (out.shape[1], out.shape[0])) > 0.5
-                overlay[mask] = COLORS[cls % len(COLORS)]
+                if mask.shape != out.shape[:2]:
+                    mask = cv2.resize(mask, (out.shape[1], out.shape[0]))
+                overlay[mask > 0.5] = COLORS[cls % len(COLORS)]
             cv2.addWeighted(overlay, opacity, out, 1 - opacity, 0, out)
 
         if show_boxes and result.boxes is not None:
