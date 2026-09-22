@@ -39,6 +39,13 @@ class VideoPlayer(QWidget):
         self.stop_button = QPushButton("Stop")
         self.stop_button.clicked.connect(self.stop)
 
+        self.step_buttons = []
+        for text, delta in (("<< 10", -10), ("< 1", -1), ("1 >", 1), ("10 >>", 10)):
+            button = QPushButton(text)
+            button.setFixedWidth(60)
+            button.clicked.connect(lambda _, d=delta: self.step(d))
+            self.step_buttons.append(button)
+
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setEnabled(False)
         self.slider.sliderMoved.connect(self.seek)
@@ -55,8 +62,12 @@ class VideoPlayer(QWidget):
         self.timer.timeout.connect(self.next_frame)
 
         controls = QHBoxLayout()
+        controls.addWidget(self.step_buttons[0])
+        controls.addWidget(self.step_buttons[1])
         controls.addWidget(self.play_button)
         controls.addWidget(self.stop_button)
+        controls.addWidget(self.step_buttons[2])
+        controls.addWidget(self.step_buttons[3])
         controls.addWidget(self.slider, 1)
         controls.addWidget(QLabel("Frame:"))
         controls.addWidget(self.frame_box)
@@ -127,6 +138,13 @@ class VideoPlayer(QWidget):
         self.current_frame += 1
         self._set_frame(frame)
         self._sync_controls()
+
+    def step(self, delta):
+        """Move delta frames from the current position (pauses playback)."""
+        if self.cap is None:
+            return
+        self.pause()
+        self.seek(self.current_frame + delta)
 
     def seek(self, frame_index):
         """Jump to an exact frame number."""

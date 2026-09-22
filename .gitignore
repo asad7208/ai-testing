@@ -46,3 +46,6 @@ venv/
 .vscode/
 .idea/
 .DS_Store
+
+# Per-machine config override (see config.json)
+config.local.json

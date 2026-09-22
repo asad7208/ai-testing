@@ -108,7 +108,35 @@ weights/
 ```
 
 Folders are scanned at startup; videos fill the Video tab list, `.pt` files fill
-each tab's model dropdown.
+each tab's model dropdown. Relative paths resolve against the folder holding
+`config.json`, so the defaults work on any machine.
+
+### Per-machine paths
+
+`config.json` is tracked in git and holds portable defaults. Never edit it for
+your own setup — that is what makes `git pull` abort on other machines. Put
+your own paths in **`config.local.json`** instead (git-ignored); it is merged
+over `config.json` at startup, key by key:
+
+```json
+{
+  "video_folder": "/home/me/videos",
+  "stiqy_sam_model_folder": "../yolo/weights"
+}
+```
+
+Only the keys you list are overridden, so new keys added to `config.json`
+upstream still reach you on a pull. **Reload Config** in the right panel picks
+up edits to either file without restarting.
+
+If a pull already aborts because `config.json` was edited locally:
+
+```bash
+git stash            # park your edits
+git pull
+git stash pop        # then move those values into config.local.json
+git checkout config.json
+```
 
 ### RVM segmentation
 
@@ -140,8 +168,8 @@ works for every product. The arrow button collapses it to a 32px strip. Stop on 
 writes to `output_folder`:
 
 ```
-<output_folder>/<video stem>/<video stem>_f000042_original.png   raw decoded frame
-<output_folder>/<video stem>/<video stem>_f000042_overlay.png    exactly what is on screen
+<output_folder>/<video stem>/images/<video stem>_f000042.png     raw decoded frame
+<output_folder>/<video stem>/overlays/<video stem>_f000042.png   exactly what is on screen
 <output_folder>/tags.csv                                         time, video, frame, overlays, note, paths
 ```
 

@@ -7,13 +7,20 @@ DEFAULT_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".m4v", ".mpg", ".mpeg", "
 
 
 def load_config(path="config.json"):
-    """Read config.json. Returns dict with 'video_folder' and 'extensions'.
+    """Read config.json, then apply config.local.json on top of it if present.
 
-    Any "*_folder" value may be relative; it is resolved against the folder
-    holding config.json, so the app works from any working directory.
+    config.json is tracked in git and holds the defaults; config.local.json is
+    git-ignored and holds whatever this machine needs to differ. Any "*_folder"
+    value may be relative; it is resolved against the folder holding
+    config.json, so the app works from any working directory.
     """
     with open(path) as f:
         config = json.load(f)
+
+    local_path = os.path.join(os.path.dirname(os.path.abspath(path)), "config.local.json")
+    if os.path.exists(local_path):
+        with open(local_path) as f:
+            config.update(json.load(f))
     config.setdefault("video_folder", "")
     config.setdefault("extensions", DEFAULT_EXTENSIONS)
     config.setdefault("stiqy_seg_model_folder", "")

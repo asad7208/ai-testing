@@ -34,6 +34,8 @@ from modules.product.stiqy.segmodel import list_models as list_seg_models
 from modules.video_loader import deinterlace, list_videos, load_config
 from modules.video_player import VideoPlayer
 
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+
 
 class MainWindow(QMainWindow):
     TAG_PANEL_WIDTH = 220
@@ -43,7 +45,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Video Viewer")
         self.resize(1200, 700)
 
-        self.config = load_config(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json"))
+        self.config = load_config(CONFIG_PATH)
         self.folder = self.config["video_folder"]
         self.current_video = ""
 
@@ -64,7 +66,7 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout()
         layout.addWidget(self.tabs)
         layout.addWidget(self.player, 1)
-        layout.addWidget(self._build_tag_panel())
+        layout.addWidget(self._build_right_panel())
 
         container = QWidget()
         container.setLayout(layout)
@@ -76,8 +78,11 @@ class MainWindow(QMainWindow):
         self.refresh_sam_models()
         self.refresh_rvm_models()
 
-    def _build_tag_panel(self):
-        """Collapsible 'Frame Tagging' panel on the right edge, shared by all products."""
+    def _build_right_panel(self):
+        """Right edge column: config reload + collapsible 'Frame Tagging' box."""
+        self.reload_button = QPushButton("Reload Config")
+        self.reload_button.clicked.connect(self.reload_config)
+
         self.tag_toggle = QToolButton()
         self.tag_toggle.setText("Frame Tagging")
         self.tag_toggle.setCheckable(True)
@@ -108,13 +113,48 @@ class MainWindow(QMainWindow):
         self.tag_panel = QWidget()
         layout = QVBoxLayout(self.tag_panel)
         layout.setContentsMargins(4, 0, 0, 0)
+        layout.addWidget(self.reload_button)
         layout.addWidget(self.tag_toggle)
         layout.addWidget(self.tag_body, 1)
         self.tag_panel.setFixedWidth(self.TAG_PANEL_WIDTH)
         return self.tag_panel
 
+    def reload_config(self):
+        """Re-read config.json and refresh every folder-backed list in place."""
+        keep = (
+            self.video_list.currentItem().text() if self.video_list.currentItem() else "",
+            self.model_combo.currentText(),
+            self.sam_combo.currentText(),
+            self.det_combo.currentText(),
+        )
+        self.config = load_config(CONFIG_PATH)
+        self.folder = self.config["video_folder"]
+
+        self.refresh_videos()
+        self.refresh_models()
+        self.refresh_det_models()
+        self.refresh_sam_models()
+
+        items = [self.video_list.item(i).text() for i in range(self.video_list.count())]
+        if keep[0] in items:
+            self.video_list.blockSignals(True)
+            self.video_list.setCurrentRow(items.index(keep[0]))
+            self.video_list.blockSignals(False)
+        for combo, text in zip(
+            (self.model_combo, self.sam_combo, self.det_combo), keep[1:]
+        ):
+            index = combo.findText(text)
+            if index > 0:
+                combo.blockSignals(True)
+                combo.setCurrentIndex(index)
+                combo.blockSignals(False)
+
+        self.tag_status.setText(f"output: {self.config['output_folder']}")
+        self.statusBar().showMessage("config reloaded")
+
     def _toggle_tag_panel(self, shown):
         self.tag_body.setVisible(shown)
+        self.reload_button.setVisible(shown)
         self.tag_toggle.setText("Frame Tagging" if shown else "")
         self.tag_toggle.setArrowType(Qt.RightArrow if shown else Qt.LeftArrow)
         self.tag_panel.setFixedWidth(self.TAG_PANEL_WIDTH if shown else 32)
