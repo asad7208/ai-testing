@@ -108,7 +108,14 @@ weights/
 ```
 
 Folders are scanned at startup; videos fill the Video tab list, `.pt` files fill
-each tab's model dropdown. Relative paths resolve against the folder holding
+each tab's model dropdown.
+
+`config.json` holds the tracked defaults. On first run `main.py` creates
+**`config.local.json`** next to it (a full copy, git-ignored) — edit that file with
+your own paths and press **Reload Config** in the right panel to re-read it and
+rebuild the video list and every model dropdown in place, keeping the current
+selections where they still exist. Relative `*_folder` values are resolved against
+the config's own directory. Relative paths resolve against the folder holding
 `config.json`, so the defaults work on any machine.
 
 ### Per-machine paths

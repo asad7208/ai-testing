@@ -31,7 +31,12 @@ from modules.product.stiqy.sam3seg import Sam3Segmenter
 from modules.product.stiqy.sam3seg import list_models as list_sam_models
 from modules.product.stiqy.segmodel import SegDetector
 from modules.product.stiqy.segmodel import list_models as list_seg_models
-from modules.video_loader import deinterlace, list_videos, load_config
+from modules.video_loader import (
+    deinterlace,
+    ensure_local_config,
+    list_videos,
+    load_config,
+)
 from modules.video_player import VideoPlayer
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
@@ -45,6 +50,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Video Viewer")
         self.resize(1200, 700)
 
+        self.local_config_path = ensure_local_config(CONFIG_PATH)
         self.config = load_config(CONFIG_PATH)
         self.folder = self.config["video_folder"]
         self.current_video = ""
@@ -126,6 +132,7 @@ class MainWindow(QMainWindow):
             self.model_combo.currentText(),
             self.sam_combo.currentText(),
             self.det_combo.currentText(),
+            self.rvm_combo.currentText(),
         )
         self.config = load_config(CONFIG_PATH)
         self.folder = self.config["video_folder"]
@@ -134,6 +141,7 @@ class MainWindow(QMainWindow):
         self.refresh_models()
         self.refresh_det_models()
         self.refresh_sam_models()
+        self.refresh_rvm_models()
 
         items = [self.video_list.item(i).text() for i in range(self.video_list.count())]
         if keep[0] in items:
@@ -141,7 +149,7 @@ class MainWindow(QMainWindow):
             self.video_list.setCurrentRow(items.index(keep[0]))
             self.video_list.blockSignals(False)
         for combo, text in zip(
-            (self.model_combo, self.sam_combo, self.det_combo), keep[1:]
+            (self.model_combo, self.sam_combo, self.det_combo, self.rvm_combo), keep[1:]
         ):
             index = combo.findText(text)
             if index > 0:
@@ -150,7 +158,7 @@ class MainWindow(QMainWindow):
                 combo.blockSignals(False)
 
         self.tag_status.setText(f"output: {self.config['output_folder']}")
-        self.statusBar().showMessage("config reloaded")
+        self.statusBar().showMessage(f"config reloaded from {self.local_config_path}")
 
     def _toggle_tag_panel(self, shown):
         self.tag_body.setVisible(shown)

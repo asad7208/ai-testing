@@ -6,6 +6,21 @@ import os
 DEFAULT_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".m4v", ".mpg", ".mpeg", ".webm"]
 
 
+def ensure_local_config(path="config.json"):
+    """Create config.local.json next to config.json on first run, if it is missing.
+
+    It starts as a copy of config.json so every key is there to edit; the app reads it
+    on top of config.json, and it is git-ignored.
+    """
+    local_path = os.path.join(os.path.dirname(os.path.abspath(path)), "config.local.json")
+    if not os.path.exists(local_path):
+        with open(path) as f:
+            defaults = json.load(f)
+        with open(local_path, "w") as f:
+            json.dump(defaults, f, indent=2)
+    return local_path
+
+
 def load_config(path="config.json"):
     """Read config.json, then apply config.local.json on top of it if present.
 
