@@ -1,5 +1,6 @@
 """Simple video viewer: pick a video from the configured folder, preview it."""
 
+import os
 import sys
 
 from PySide6.QtCore import Qt
@@ -42,7 +43,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Video Viewer")
         self.resize(1200, 700)
 
-        self.config = load_config()
+        self.config = load_config(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json"))
         self.folder = self.config["video_folder"]
         self.current_video = ""
 

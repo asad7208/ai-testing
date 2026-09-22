@@ -10,9 +10,9 @@
     ".mpeg",
     ".webm"
   ],
-  "stiqy_seg_model_folder": "/home/quidich/A_QuidichWork/ai-testing/weights/stiqy",
-  "qt_det_model_folder": "/home/quidich/A_QuidichWork/ai-testing/weights/qt",
-  "stiqy_sam_model_folder": "/home/quidich/A_QuidichWork/yolo/weights",
+  "stiqy_seg_model_folder": "weights/stiqy",
+  "qt_det_model_folder": "weights/qt",
+  "stiqy_sam_model_folder": "../yolo/weights",
   "output_folder": "/home/quidich/A_QuidichWork/ai-testing/output",
-  "stiqy_rvm_ckpt_folder": "/home/quidich/A_QuidichWork/matting_experiment/rvm/checkpoint/seg"
+  "stiqy_rvm_ckpt_folder": "../matting_experiment/rvm/checkpoint/seg"
 }
