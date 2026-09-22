@@ -150,10 +150,26 @@ records whichever algorithms were active — the `overlays` column names them
 (e.g. `deinterlace + stiqy-sam:sam3.1_multiplex.pt[person] + qt-det:...`).
 New products are covered by adding one line to `MainWindow.active_overlays()`.
 
+## Setup
+
+Create and activate your own conda env, then let `setup.sh` fill it:
+
+```bash
+conda create -n aitesting python=3.13 -y
+conda activate aitesting
+./setup.sh
+```
+
+`setup.sh` installs into whatever env is active (it refuses to run with none),
+pulls torch/torchvision from the CUDA wheel index (`CUDA=cu126 ./setup.sh` or
+`CUDA=cpu ./setup.sh` to change the build), installs `requirements.txt`, then
+prints the resolved versions and whether CUDA is visible.
+
+SAM 3 / 3.1 weights are gated on Hugging Face and are not installed by this
+script — fetch them separately and point `stiqy_sam_model_folder` at them.
+
 ## Run
 
 ```bash
-python3 main.py
+python main.py
 ```
-
-Requires PySide6, OpenCV and Ultralytics.

@@ -1,0 +1,6 @@
+# Installed by setup.sh into the conda env you have activated.
+# Torch is NOT listed here - setup.sh installs it from the CUDA wheel index.
+PySide6>=6.11
+opencv-python>=4.10
+ultralytics>=8.4.90
+numpy>=2.0
