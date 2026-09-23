@@ -43,6 +43,7 @@ def load_config(path="config.json"):
     config.setdefault("stiqy_sam_model_folder", "")
     config.setdefault("stiqy_rvm_ckpt_folder", "")
     config.setdefault("output_folder", "output")
+    config.setdefault("annotation_folder", "")
 
     base = os.path.dirname(os.path.abspath(path))
     for key, value in config.items():

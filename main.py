@@ -3,6 +3,8 @@
 import os
 import sys
 
+import cv2
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
@@ -22,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from modules.annotation_viewer import FORMATS, draw_annotations, list_pairs, load_class_names, read_labels
 from modules.frame_tagger import save_tag
 from modules.product.qt.detyolo import YoloDetector
 from modules.product.qt.detyolo import list_models as list_det_models
@@ -54,6 +57,8 @@ class MainWindow(QMainWindow):
         self.config = load_config(CONFIG_PATH)
         self.folder = self.config["video_folder"]
         self.current_video = ""
+        self.ann_pairs = []
+        self.ann_names = []
 
         self.player = VideoPlayer()
         self.player.processor = self.process_frame
@@ -65,6 +70,7 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.West)
         self.tabs.addTab(self._build_video_tab(), "Video")
+        self.tabs.addTab(self._build_annotation_tab(), "Annotation")
         self.tabs.addTab(self._build_stiqy_tab(), "Stiqy")
         self.tabs.addTab(self._build_qt_tab(), "Qt")
         self.tabs.setFixedWidth(300)
@@ -229,6 +235,99 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.video_list, 1)
         layout.addWidget(self.deint_check)
         return tab
+
+    def _build_annotation_tab(self):
+        """Review an annotated dataset: point at its folder, pick a format, load."""
+        self.ann_folder = QLineEdit(self.config["annotation_folder"])
+        self.ann_folder.setPlaceholderText("dataset folder (images/ + labels/)")
+
+        browse_button = QPushButton("Browse...")
+        browse_button.clicked.connect(self.choose_annotation_folder)
+
+        self.ann_format = QComboBox()
+        self.ann_format.addItems(FORMATS)
+
+        load_button = QPushButton("Load")
+        load_button.clicked.connect(self.load_annotations)
+
+        self.ann_list = QListWidget()
+        self.ann_list.currentRowChanged.connect(self.show_annotation)
+
+        self.ann_label_check = QCheckBox("Show class names")
+        self.ann_label_check.setChecked(True)
+        self.ann_label_check.toggled.connect(
+            lambda: self.show_annotation(self.ann_list.currentRow())
+        )
+
+        self.ann_opacity = QSlider(Qt.Horizontal)
+        self.ann_opacity.setRange(0, 100)
+        self.ann_opacity.setValue(40)
+        self.ann_opacity.valueChanged.connect(
+            lambda: self.show_annotation(self.ann_list.currentRow())
+        )
+
+        self.ann_status = QLabel("no dataset loaded")
+        self.ann_status.setWordWrap(True)
+
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.addWidget(QLabel("<b>Annotation check</b>"))
+        layout.addWidget(self.ann_folder)
+        layout.addWidget(browse_button)
+        layout.addWidget(QLabel("Format"))
+        layout.addWidget(self.ann_format)
+        layout.addWidget(load_button)
+        layout.addWidget(self.ann_list, 1)
+        layout.addWidget(self.ann_label_check)
+        layout.addWidget(QLabel("Fill opacity"))
+        layout.addWidget(self.ann_opacity)
+        layout.addWidget(self.ann_status)
+        return tab
+
+    def choose_annotation_folder(self):
+        folder = QFileDialog.getExistingDirectory(
+            self, "Select dataset folder", self.ann_folder.text()
+        )
+        if folder:
+            self.ann_folder.setText(folder)
+
+    def load_annotations(self):
+        root = self.ann_folder.text()
+        self.ann_pairs = list_pairs(root)
+        self.ann_names = load_class_names(root)
+        self.ann_list.clear()
+        self.ann_list.addItems(
+            [name + ("" if label else "   (no label)") for name, _, label in self.ann_pairs]
+        )
+        labelled = sum(1 for _, _, label in self.ann_pairs if label)
+        self.ann_status.setText(
+            f"{len(self.ann_pairs)} images, {labelled} labelled"
+            if self.ann_pairs
+            else f"no images found in {root}"
+        )
+        if self.ann_pairs:
+            self.ann_list.setCurrentRow(0)
+
+    def show_annotation(self, row):
+        if not (0 <= row < len(self.ann_pairs)):
+            return
+        name, image_path, label_path = self.ann_pairs[row]
+        image = cv2.imread(image_path)
+        if image is None:
+            self.ann_status.setText(f"could not read {name}")
+            return
+        height, width = image.shape[:2]
+        annotations = read_labels(label_path, width, height, self.ann_format.currentText())
+        self.player.show_image(
+            draw_annotations(
+                image,
+                annotations,
+                names=self.ann_names,
+                opacity=self.ann_opacity.value() / 100.0,
+                show_labels=self.ann_label_check.isChecked(),
+            )
+        )
+        self.ann_status.setText(f"{name}  {width}x{height}  {len(annotations)} objects")
 
     def _build_stiqy_tab(self):
         self.model_combo = QComboBox()

@@ -26,6 +26,7 @@ class VideoPlayer(QWidget):
         self._raw_frame = None
         self.processed_frame = None
         self.processor = None  # optional callable: frame -> frame
+        self.apply_processor = True
 
         self.display = QLabel("No video loaded")
         self.display.setAlignment(Qt.AlignCenter)
@@ -83,6 +84,7 @@ class VideoPlayer(QWidget):
         self.stop()
         if self.cap is not None:
             self.cap.release()
+        self.apply_processor = True
         self.cap = cv2.VideoCapture(path)
         if not self.cap.isOpened():
             self.cap = None
@@ -103,6 +105,21 @@ class VideoPlayer(QWidget):
 
         self.seek(0)
         return True
+
+    def show_image(self, image):
+        """Display a still image (annotation review); playback controls go idle."""
+        self.pause()
+        if self.cap is not None:
+            self.cap.release()
+            self.cap = None
+        self.frame_count = 0
+        self.current_frame = 0
+        self.apply_processor = False
+        for widget in (self.slider, self.frame_box):
+            widget.setEnabled(False)
+        self._raw_frame = image
+        self._draw_frame()
+        self.info_label.setText(f"still image  {image.shape[1]}x{image.shape[0]}")
 
     # --- playback ----------------------------------------------------
     def toggle_play(self):
@@ -176,7 +193,7 @@ class VideoPlayer(QWidget):
 
     def _draw_frame(self):
         frame = self._raw_frame
-        if self.processor is not None:
+        if self.processor is not None and self.apply_processor:
             frame = self.processor(frame)
         self.processed_frame = frame
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

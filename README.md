@@ -10,12 +10,14 @@ flowchart LR
 
     subgraph UI["main.py — MainWindow"]
         T1[Video tab<br/>folder / list / Deinterlace]
+        TA[Annotation tab<br/>dataset folder, format, Load]
         T2[Stiqy tab<br/>seg model, masks, opacity<br/>SAM 3.1 model + text prompt]
         T3[Qt tab<br/>model, detection, labels]
         PF[process_frame]
     end
 
     subgraph MOD["modules/"]
+        ANN[annotation_viewer<br/>list_pairs / read_labels / draw]
         LD[video_loader.loader<br/>load_config / list_videos]
         DI[video_loader.deinterlace<br/>deinterlace]
         PL[video_player.player<br/>VideoPlayer]
@@ -28,6 +30,7 @@ flowchart LR
     CFG --> LD --> T1
     CFG --> T2 & T3
     T1 -->|selected video| PL
+    TA -->|annotated still| ANN --> PL
     T2 -->|.pt weights| SEG
     T2 -->|sam*.pt + text prompt| SAM
     T3 -->|.pt weights| DET
@@ -72,6 +75,9 @@ modules/
   video_loader/
     loader.py                   load_config(), list_videos()
     deinterlace.py              deinterlace() — bob, top field
+  annotation_viewer/
+    viewer.py                   list_pairs(), read_labels(), draw() — YOLO
+                                seg / det label review
   frame_tagger/
     tagger.py                   save_tag() — original + overlay + tags.csv
   video_player/
@@ -103,7 +109,8 @@ weights/
   "stiqy_sam_model_folder": "...",
   "stiqy_rvm_ckpt_folder": "...",
   "qt_det_model_folder": "...",
-  "output_folder": "..."
+  "output_folder": "...",
+  "annotation_folder": "..."
 }
 ```
 
@@ -167,6 +174,24 @@ next frame; a seek clears all state.
 
 The view combo switches between the green `overlay` (alpha from the mask ×
 the opacity slider) and the raw `mask`.
+
+## Annotation check
+
+The **Annotation** tab reviews a labelled dataset. Point it at a folder laid
+out the usual YOLO way (a flat folder works too):
+
+```
+<dataset>/images/SC1TK7_1.jpg
+<dataset>/labels/SC1TK7_1.txt
+<dataset>/labels/classes.txt      optional, for class names
+```
+
+Pick the format (**YOLO segmentation** or **YOLO detection**), press **Load**,
+and the file list fills — images with no label file are marked `(no label)`.
+Selecting one draws its polygons (or boxes) over the image in the preview, with
+a fill-opacity slider and a class-name toggle. The status line reports size and
+object count. Algorithm overlays are bypassed in this mode, so you see the
+annotations only.
 
 ## Frame tagging
 

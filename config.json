@@ -14,5 +14,6 @@
   "qt_det_model_folder": "weights/qt",
   "stiqy_sam_model_folder": "weights/sam",
   "output_folder": "output",
-  "stiqy_rvm_ckpt_folder": "weights/rvm"
+  "stiqy_rvm_ckpt_folder": "weights/rvm",
+  "annotation_folder": "datasets"
 }
